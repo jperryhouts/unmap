@@ -13,3 +13,5 @@ Extracts arrays of values from colormapped figures.
     import unmap as um
     img = um.imread('figure.png')
     arr = um.unmap(img)
+
+![Unmapped figure example](unmapped_example.png?raw=true "Unmapped figure")
