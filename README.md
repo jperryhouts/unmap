@@ -5,7 +5,7 @@ Extracts arrays of values from colormapped figures.
 
 ### Usage
 
-#### From Command Line
+#### Interactive GUI
     unmap [FILE]
 * click ends of color bar
 
