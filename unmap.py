@@ -1,20 +1,30 @@
 #!/usr/bin/env python
 
 from pylab import *
-import scipy.ndimage, Tkinter, tkSimpleDialog
+import scipy.ndimage
+import wx
+app = wx.App()
+
+def getText(prompt, title):
+    frame = wx.Frame(None, -1)
+    frame.SetDimensions(0,0,200,50)
+    dlg = wx.TextEntryDialog(frame, prompt, title)
+    ret = dlg.GetValue() if (dlg.ShowModal() == wx.ID_OK) else None
+    dlg.Destroy()
+    return ret
 
 def onclick(event):
-    global ix, iy, coords, cbarvals
+    global coords, cbarvals, fig, cid
     ix, iy = event.xdata, event.ydata
     coords.append((ix,iy))
     scatter([ix], [iy], c=img[int(iy),int(ix),:]/256.0)
     fig.canvas.draw()
-    root = Tkinter.Tk()
-    cbarvals.append(float(tkSimpleDialog.askstring("Value", "Enter start value")))
-    root.destroy()
+    vtxt = getText('Enter value', 'Value')
+    val = float(vtxt) if vtxt is not None else float(len(cbarvals))
+    cbarvals.append(val)
     if len(coords) == 2:
         fig.canvas.mpl_disconnect(cid)
-        close()
+        close(fig)
     return coords
 
 def get_rgb(img):
