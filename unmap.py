@@ -6,9 +6,10 @@ import wx
 app = wx.App()
 
 def getText(prompt, title):
+    global coords
     frame = wx.Frame(None, -1)
     frame.SetDimensions(0,0,200,50)
-    dlg = wx.TextEntryDialog(frame, prompt, title)
+    dlg = wx.TextEntryDialog(frame, prompt, title, str(len(coords)-1))
     ret = dlg.GetValue() if (dlg.ShowModal() == wx.ID_OK) else None
     dlg.Destroy()
     return ret
