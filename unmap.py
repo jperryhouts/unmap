@@ -58,7 +58,7 @@ def unmap(img, rgb=None, minv=None, maxv=None):
             in the figure.
         minv and maxv are the values of the ends of the colormap (default: [0, 1])
     '''
-    if not rgb:
+    if rgb is None:
         rgb, minv, maxv = get_rgb(img)
     elif not minv or not maxv:
         minv = 0.0
