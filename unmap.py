@@ -1,56 +1,58 @@
 #!/usr/bin/env python
 
-from pylab import *
+import matplotlib.pyplot as plt
+import numpy as np
 import scipy.ndimage
-import wx
-app = wx.App()
+try:
+    import Tkinter as tk
+    from tkSimpleDialog import askfloat as tkaskfloat
+except:
+    import tkinter as tk
+    from tkinter.simpledialog import askfloat as tkaskfloat
 
-def getText(prompt, title):
-    global coords
-    frame = wx.Frame(None, -1)
-    frame.SetDimensions(0,0,200,50)
-    dlg = wx.TextEntryDialog(frame, prompt, title, str(len(coords)-1))
-    ret = dlg.GetValue() if (dlg.ShowModal() == wx.ID_OK) else None
-    dlg.Destroy()
+def getFloat(prompt, title, default=None):
+    root = tk.Tk()
+    root.withdraw()
+    ret = tkaskfloat(title, prompt, parent=root, initialvalue=default)
+    root.destroy()
     return ret
 
 def onclick(event):
-    global coords, cbarvals, fig, cid
+    global _coords, _cbarvals, _fig, _cid
     ix, iy = event.xdata, event.ydata
-    coords.append((ix,iy))
-    scatter([ix], [iy], c=img[int(iy),int(ix),:]/256.0)
-    fig.canvas.draw()
-    vtxt = getText('Enter value', 'Value')
-    val = float(vtxt) if vtxt is not None else float(len(cbarvals))
-    cbarvals.append(val)
-    if len(coords) == 2:
-        fig.canvas.mpl_disconnect(cid)
-        close(fig)
-    return coords
+    _coords.append((ix,iy))
+    plt.scatter([ix], [iy], c=img[int(iy),int(ix),:]/256.0)
+    _fig.canvas.draw()
+    val = getFloat('Value', 'Enter value', float(len(_cbarvals)))
+    _cbarvals.append(val)
+    if len(_coords) == 2:
+        _fig.canvas.mpl_disconnect(_cid)
+        plt.close(_fig)
+    return _coords
 
 def get_rgb(img):
-    # Display image, and wait for user input
-    global coords, cbarvals, fig, cid
-    coords = []
-    cbarvals = []
-    fig = figure(1)
-    ax1 = fig.add_subplot(111)
+    # Interactively choose ends of colorbar
+    global _coords, _cbarvals, _fig, _cid
+    _coords = []
+    _cbarvals = []
+    _fig = plt.figure(1)
+    ax1 = _fig.add_subplot(111)
     ax1.imshow(img)
-    title('Click to select the ends of the colorbar')
-    cid = fig.canvas.mpl_connect('button_press_event', onclick)
-    show(1)
+    plt.title('Click to select the ends of the colorbar')
+    _cid = _fig.canvas.mpl_connect('button_press_event', onclick)
+    plt.show(1)
 
     # Make transect of interpolation points from pt1 to pt2
-    pt1, pt2 = coords
-    r = sqrt((pt1[0]-pt2[0])**2 + (pt1[1] - pt2[1])**2)
-    xs = linspace(pt1[0], pt2[0], r)
-    ys = linspace(pt1[1], pt2[1], r)
+    pt1, pt2 = _coords
+    r = np.sqrt((pt1[0]-pt2[0])**2 + (pt1[1] - pt2[1])**2)
+    xs = np.linspace(pt1[0], pt2[0], r)
+    ys = np.linspace(pt1[1], pt2[1], r)
 
-    R = scipy.ndimage.map_coordinates(img[:,:,0], np.vstack((ys, xs)))
-    G = scipy.ndimage.map_coordinates(img[:,:,1], np.vstack((ys, xs)))
-    B = scipy.ndimage.map_coordinates(img[:,:,2], np.vstack((ys, xs)))
+    R = scipy.ndimage.map_coordinates(img[:,:,0], np.stack((ys, xs)))
+    G = scipy.ndimage.map_coordinates(img[:,:,1], np.stack((ys, xs)))
+    B = scipy.ndimage.map_coordinates(img[:,:,2], np.stack((ys, xs)))
 
-    return array((R,G,B)).T, cbarvals[0], cbarvals[1]
+    return np.array((R,G,B)).T, _cbarvals[0], _cbarvals[1]
 
 def unmap(img, rgb=None, minv=None, maxv=None):
     '''
@@ -77,27 +79,34 @@ def unmap(img, rgb=None, minv=None, maxv=None):
     return values*(maxv-minv)+minv
 
 if __name__ == '__main__':
-    import sys
-    img = imread(sys.argv[1])[:,:,:3]
+    import argparse
+    parser = argparse.ArgumentParser(description='Convert a colormapped figure to its raw values.')
+    parser.add_argument('-o', '--outfile', type=argparse.FileType('w'), help='Write xyz values to file.')
+    parser.add_argument('infile', help='Image to process.')
+    args = parser.parse_args()
 
+    img = plt.imread(args.infile)[:,:,:3]
     values = unmap(img)
 
-    figure()
-    imshow(values)
-    colorbar()
+    if args.outfile:
+        np.savetxt(args.outfile, values)
 
-    figure()
-    imshow(img)
+    plt.figure()
+    plt.imshow(values)
+    plt.colorbar()
 
-    #figure()
-    #xx = linspace(0,1,rgb.shape[0])
-    #plot(xx, rgb[:,0]/float(rgb.ptp()), 'r', linewidth=2)
-    #plot(xx, rgb[:,1]/float(rgb.ptp()), 'g', linewidth=2)
-    #plot(xx, rgb[:,2]/float(rgb.ptp()), 'b', linewidth=2)
-    #xlim((-0.01, 1.01))
-    #ylim((-0.01, 1.01))
-    #title('Color map')
-    #ylabel('Intensity')
-    #xlabel('Value')
+    plt.figure()
+    plt.imshow(img)
 
-    show()
+    #plt.figure()
+    #xx = np.linspace(0,1,rgb.shape[0])
+    #plt.plot(xx, rgb[:,0]/float(rgb.ptp()), 'r', linewidth=2)
+    #plt.plot(xx, rgb[:,1]/float(rgb.ptp()), 'g', linewidth=2)
+    #plt.plot(xx, rgb[:,2]/float(rgb.ptp()), 'b', linewidth=2)
+    #plt.xlim((-0.01, 1.01))
+    #plt.ylim((-0.01, 1.01))
+    #plt.title('Color map')
+    #plt.ylabel('Intensity')
+    #plt.xlabel('Value')
+
+    plt.show()
