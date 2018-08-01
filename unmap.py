@@ -47,6 +47,22 @@ def onclick(event):
         plt.close(_fig)
     return _coords
 
+def interp2D(img, x, y):
+    '''
+    Linear interpolate from regularly spaced grid.
+    '''
+    v0 = img[int(y),  int(x)]
+    v1 = img[int(y),  int(x)+1]
+    v2 = img[int(y)+1,int(x)]
+    v3 = img[int(y)+1,int(x)+1]
+    x0 = x-int(x)
+    y0 = y-int(y)
+    shp0 = (1.0-x0)*(1.0-y0)
+    shp1 = (x0)*(1.0-y0)
+    shp2 = (1.0-x0)*(y0)
+    shp3 = (x0)*(y0)
+    return sum([v0*shp0, v1*shp1, v2*shp2, v3*shp3])
+
 def get_rgb(img):
     # Interactively choose colorbar, extract color profile from image
     global _coords, _cbarvals, _fig, _cid
@@ -65,9 +81,9 @@ def get_rgb(img):
     xs = np.linspace(pt1[0], pt2[0], r)
     ys = np.linspace(pt1[1], pt2[1], r)
 
-    R = scipy.ndimage.map_coordinates(img[:,:,0], np.stack((ys, xs)))
-    G = scipy.ndimage.map_coordinates(img[:,:,1], np.stack((ys, xs)))
-    B = scipy.ndimage.map_coordinates(img[:,:,2], np.stack((ys, xs)))
+    R = [interp2D(img[:,:,0],x,y) for x,y in zip(xs,ys)]
+    G = [interp2D(img[:,:,1],x,y) for x,y in zip(xs,ys)]
+    B = [interp2D(img[:,:,2],x,y) for x,y in zip(xs,ys)]
 
     return np.array((R,G,B)).T, _cbarvals[0], _cbarvals[1]
 
