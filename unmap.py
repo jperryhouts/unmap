@@ -1,16 +1,33 @@
 #!/usr/bin/env python
 
+'''
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+'''
+
 import matplotlib.pyplot as plt
 import numpy as np
-import scipy.ndimage
 try:
+    # Python 2.x
     import Tkinter as tk
     from tkSimpleDialog import askfloat as tkaskfloat
 except:
+    # Python 3.x
     import tkinter as tk
     from tkinter.simpledialog import askfloat as tkaskfloat
 
 def getFloat(prompt, title, default=None):
+    # Simple tkinter dialog, returns a float.
     root = tk.Tk()
     root.withdraw()
     ret = tkaskfloat(title, prompt, parent=root, initialvalue=default)
@@ -31,7 +48,7 @@ def onclick(event):
     return _coords
 
 def get_rgb(img):
-    # Interactively choose ends of colorbar
+    # Interactively choose colorbar, extract color profile from image
     global _coords, _cbarvals, _fig, _cid
     _coords = []
     _cbarvals = []
